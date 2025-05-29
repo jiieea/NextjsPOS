@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   DashboardDescription,
   DashboardHeader,
@@ -25,8 +28,14 @@ import type { ReactElement } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { NextPageWithLayout } from "../_app";
+import { api } from "@/utils/api";
+import { Loader2 } from "lucide-react";
+
 
 const CategoriesPage: NextPageWithLayout = () => {
+  const apiUtils = api.useUtils();
+
+
   const [createCategoryDialogOpen, setCreateCategoryDialogOpen] =
     useState(false);
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
@@ -40,8 +49,20 @@ const CategoriesPage: NextPageWithLayout = () => {
     resolver: zodResolver(categoryFormSchema),
   });
 
+  const { data : categories , isLoading : isLoadingCategories } = api.category.getCategories.useQuery();
+
+  const { mutate : createCategory } = api.category.createNewCategory.useMutation({
+    onSuccess : async() => {
+      await apiUtils.category.getCategories.invalidate();
+      alert("Category created successfully");
+      setCreateCategoryDialogOpen(false);
+      createCategoryForm.reset();
+    }
+  });
   const handleSubmitCreateCategory = (data: CategoryFormSchema) => {
-    console.log(data);
+    createCategory({
+      name : data.name,
+    })
   };
 
   const handleSubmitEditCategory = (data: CategoryFormSchema) => {
@@ -104,28 +125,23 @@ const CategoriesPage: NextPageWithLayout = () => {
         </div>
       </DashboardHeader>
 
-      <div>
-        {CATEGORIES.length === 0 ? (
-          <div className="rounded-md border">
-            <div className="p-8 text-center">
-              <p className="text-muted-foreground">No categories found</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Get started by creating your first category
-              </p>
+      <div className="grid grid-cols-4 gap-4">
+        {
+          isLoadingCategories ? (
+            <div className="flex items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin" />
             </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {CATEGORIES.filter((cat) => cat.id !== "all").map((category) => (
-              <CategoryCatalogCard
-                key={category.id}
-                name={category.name}
-                productCount={category.count}
-                onEdit={() => handleClickEditCategory(category)}
-                onDelete={() => handleClickDeleteCategory(category.id)}
-              />
-            ))}
-          </div>
+          ) : (
+            // map the categories
+            categories?.map((category) => {
+              return (
+                <CategoryCatalogCard
+                  key={category.id}
+                  name={ category.name}
+                  productCound={category.productCound}
+                />
+              )
+})
         )}
       </div>
 

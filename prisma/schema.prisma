@@ -7,14 +7,17 @@ generator client {
 
 datasource db {
     provider = "postgresql"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
-    directUrl = env("DIRECT_URL")
-    url      = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")  // for sync to supabase db
+    url      = env("DATABASE_URL") // for query
 }
 
-Category {
-    
+
+model Category {
+    id String @id @default(uuid())
+
+    name    String
+    productCound Int    @default(0)
+
+    createAt DateTime @default(now())
+        updateAt DateTime @updatedAt
 }

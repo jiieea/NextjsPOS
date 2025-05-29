@@ -6,7 +6,7 @@ import { Pencil, Trash } from "lucide-react";
 
 export interface CategoryCatalogCardProps {
   name: string;
-  productCount: number;
+  productCound: number;
   isSelected?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -15,7 +15,7 @@ export interface CategoryCatalogCardProps {
 
 export const CategoryCatalogCard: React.FC<CategoryCatalogCardProps> = ({
   name,
-  productCount,
+  productCound,
   isSelected = false,
   onEdit,
   onDelete,
@@ -32,7 +32,7 @@ export const CategoryCatalogCard: React.FC<CategoryCatalogCardProps> = ({
       <CardContent className="flex flex-col items-center justify-center p-4 text-center">
         <div className="text-lg font-medium">{name}</div>
         <div className="text-muted-foreground text-sm">
-          {productCount} {productCount === 1 ? "Product" : "Products"}
+          {productCound} {productCound === 0 ? "Product" : "Products"}
         </div>
       </CardContent>
 

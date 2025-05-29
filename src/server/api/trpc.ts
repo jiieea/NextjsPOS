@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { db } from "@/server/db";
 import { getAuth } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
