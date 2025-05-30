@@ -49,7 +49,7 @@ const CategoriesPage: NextPageWithLayout = () => {
     resolver: zodResolver(categoryFormSchema),
   });
 
-  const { data : categories , isLoading : isLoadingCategories } = api.category.getCategories.useQuery();
+  const { data : categories , isLoading : isLoadingCategories } = api.category.getCategories.useQuery(); // show data
 
   const { mutate : createCategory } = api.category.createNewCategory.useMutation({
     onSuccess : async() => {
@@ -59,6 +59,14 @@ const CategoriesPage: NextPageWithLayout = () => {
       createCategoryForm.reset();
     }
   });
+
+  const { mutate : deleteCategoryById } = api.category.deleteCategoryById.useMutation({
+    onSuccess : async() => {
+      await apiUtils.category.getCategories.invalidate();
+      alert("Delete Category Success");
+      setCategoryToDelete(null);
+    }
+  })
   const handleSubmitCreateCategory = (data: CategoryFormSchema) => {
     createCategory({
       name : data.name,
@@ -80,6 +88,15 @@ const CategoriesPage: NextPageWithLayout = () => {
   const handleClickDeleteCategory = (categoryId: string) => {
     setCategoryToDelete(categoryId);
   };
+
+
+  // handle confirm delete category
+const handleConfirmDeleteCategory = () => {
+  if(!categoryToDelete) return;
+  deleteCategoryById({
+    categoryId : categoryToDelete
+  })
+}
 
   return (
     <>
@@ -137,8 +154,9 @@ const CategoriesPage: NextPageWithLayout = () => {
               return (
                 <CategoryCatalogCard
                   key={category.id}
-                  name={ category.name}
-                  productCound={category.productCound}
+                  name={category.name ?? ''}
+                  productCound={category.productCound ?? 0}
+                  onDelete={() => category.id && handleClickDeleteCategory(category.id)}
                 />
               )
 })
@@ -189,7 +207,7 @@ const CategoriesPage: NextPageWithLayout = () => {
           </AlertDialogDescription>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant="destructive">Delete</Button>
+            <Button variant="destructive" onClick={handleConfirmDeleteCategory}>Delete</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
