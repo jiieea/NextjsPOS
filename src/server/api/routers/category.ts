@@ -55,4 +55,25 @@ export const categoryRouter = createTRPCRouter({
       }),
 
       // update category
+      updateCategoryById : protectedProcedure.input(z.object({
+        categoryId : z.string(),
+        name : z.string().min(3 , "Name must be at least 3 characters long"),
+      })).mutation(async({ ctx , input}) => {
+        const { db } = ctx;
+        const updatedCategory= await db.category.update({
+            where : {
+                id : input.categoryId,
+            },
+            data  : {
+                name : input.name,
+            },
+            select :{
+                id : true,
+                name : true,
+                productCound : true,
+            }
+        });
+
+        return updatedCategory;
+      })
 })

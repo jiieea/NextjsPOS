@@ -40,7 +40,7 @@ const CategoriesPage: NextPageWithLayout = () => {
     useState(false);
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
-
+  const [categoryToEdit, setCategoryToEdit] = useState<string | null>(null);
   const createCategoryForm = useForm<CategoryFormSchema>({
     resolver: zodResolver(categoryFormSchema),
   });
@@ -67,21 +67,40 @@ const CategoriesPage: NextPageWithLayout = () => {
       setCategoryToDelete(null);
     }
   })
+
+  // handle update category
+  const { mutate : updateCategotyyById } = api.category.updateCategoryById.useMutation({
+    onSuccess : async() => {
+      await apiUtils.category.getCategories.invalidate();
+      alert("Category Updated Successfully");
+      editCategoryForm.reset();
+      setEditCategoryDialogOpen(false);
+      setCategoryToEdit(null);
+    }
+  })
+
+  // handle submit create category
   const handleSubmitCreateCategory = (data: CategoryFormSchema) => {
     createCategory({
       name : data.name,
     })
   };
 
+  // handle submit edit category
   const handleSubmitEditCategory = (data: CategoryFormSchema) => {
-    console.log(data);
+    if(!categoryToEdit) return;
+    
+    updateCategotyyById({
+      name : data.name,
+      categoryId : categoryToEdit,
+    })
   };
 
-  const handleClickEditCategory = (category: Category) => {
+  const handleClickEditCategory = (category : { id : string; name : string;}) => {
     setEditCategoryDialogOpen(true);
-
+    setCategoryToEdit(category.id);
     editCategoryForm.reset({
-      name: category.name,
+      name: category.name ?? '',
     });
   };
 
@@ -157,6 +176,10 @@ const handleConfirmDeleteCategory = () => {
                   name={category.name ?? ''}
                   productCound={category.productCound ?? 0}
                   onDelete={() => category.id && handleClickDeleteCategory(category.id)}
+                  onEdit={() => category.id && handleClickEditCategory({
+                    id : category.id,
+                    name : category.name ?? '',
+                  })}
                 />
               )
 })
