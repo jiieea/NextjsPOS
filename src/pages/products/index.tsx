@@ -7,13 +7,22 @@ import {
 import type { NextPageWithLayout } from "../_app";
 import type { ReactElement } from "react";
 import { Button } from "@/components/ui/button";
-import { PRODUCTS } from "@/data/mock";
-import { ProductMenuCard } from "@/components/shared/product/ProductMenuCard";
 import { ProductCatalogCard } from "@/components/shared/product/ProductCatalogCard";
 import { api } from "@/utils/api";
-
+import { AlertDialog, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialogCancel, AlertDialogContent } from "@/components/ui/alert-dialog";
+import { ProductForm } from "@/components/shared/product/ProductForm";
+import { useForm } from "react-hook-form";
+import { productFormSchema, ProductFormSchema } from "@/forms/products";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form } from "@/components/ui/form";
 const ProductsPage: NextPageWithLayout = () => {
   const { data : products , isLoading : isLoadingProducts } = api.product.getProducts.useQuery();
+  const createProductForm = useForm<ProductFormSchema>({
+    resolver : zodResolver(productFormSchema),
+  });
+
+  
   return (
     <>
       <DashboardHeader>
@@ -25,7 +34,29 @@ const ProductsPage: NextPageWithLayout = () => {
             </DashboardDescription>
           </div>
 
-          <Button>Add New Product</Button>
+        {/* alertDialog */}
+        <AlertDialog
+          >
+            <AlertDialogTrigger asChild>
+              <Button>Add New Product</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Add New Category</AlertDialogTitle>
+              </AlertDialogHeader>
+            <Form {...createProductForm}>
+            <ProductForm />
+            </Form>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                >
+                  Create Category
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </DashboardHeader>
 
