@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { supabaseAdmin } from "../../supabase-admin";
+import { TRPCError } from "@trpc/server";
+import { Bucket } from "@/server/bucket";
 export const productRouter = createTRPCRouter({
     getProducts : protectedProcedure.query(async({ ctx }) => {
         const { db } = ctx;
@@ -21,11 +24,11 @@ export const productRouter = createTRPCRouter({
     }),
 
     // create a new product
-    createNewProduct : protectedProcedure.input(
+    createNewProduct  : protectedProcedure.input(
         z.object({
             name : z.string().min(1, "Name is required"),
             price : z.number().min(50000, "Price must be at least 50000"),
-            categoryId : z.string(),
+            categoryId: z.string(),
             image : z.string().url()
         })
     ).mutation(async({ ctx , input }) => {
@@ -40,9 +43,26 @@ export const productRouter = createTRPCRouter({
                     }
                 },
                 image : input.image
-            },
-        })
+            }
+        });
         return product;
     }),
+
+    createProductImageUploadUrl : protectedProcedure.mutation(async() => {
+        const { data , error } = await supabaseAdmin.storage.from(
+           Bucket.ProductImages
+        ).createSignedUploadUrl(
+            `${Date.now()}.jpeg`
+        )
+
+        if(error) {
+            throw new TRPCError({
+                code : "INTERNAL_SERVER_ERROR",
+                message : error.message
+            })
+        }
+        return data;
+    }),
+
 
 });

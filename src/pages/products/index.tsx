@@ -16,12 +16,41 @@ import { useForm } from "react-hook-form";
 import { productFormSchema, ProductFormSchema } from "@/forms/products";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
+import { useState } from "react";
+
 const ProductsPage: NextPageWithLayout = () => {
+  const apiUtils = api.useUtils();
+  const [uploadImageUrl, setUploadImageUrl] = useState<string | null>(null);
+  const [createProductDialogOpen, setCreateProductDialogOpen] =
+  useState(false);
   const { data : products , isLoading : isLoadingProducts } = api.product.getProducts.useQuery();
+
   const createProductForm = useForm<ProductFormSchema>({
     resolver : zodResolver(productFormSchema),
   });
 
+  const { mutate : createProduct } = api.product.createNewProduct.useMutation({
+    onSuccess : async() => {
+      await apiUtils.product.getProducts.invalidate();
+      createProductForm.reset();
+      alert("Product created successfully");
+      setCreateProductDialogOpen(false);
+    }
+  })
+
+  const handleSubmitCreateProduct =  (values : ProductFormSchema) => {
+   if(!uploadImageUrl) {
+    alert("Please upload an image");
+    return;
+   }
+
+    createProduct({
+      name : values.name,
+      price : values.price,
+      categoryId : values.categoryId,
+      image : uploadImageUrl,
+    });
+  }
   
   return (
     <>
@@ -36,23 +65,31 @@ const ProductsPage: NextPageWithLayout = () => {
 
         {/* alertDialog */}
         <AlertDialog
+        open={createProductDialogOpen}
+        onOpenChange={setCreateProductDialogOpen}
           >
             <AlertDialogTrigger asChild>
               <Button>Add New Product</Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Add New Category</AlertDialogTitle>
+                <AlertDialogTitle>Add New Product</AlertDialogTitle>
               </AlertDialogHeader>
             <Form {...createProductForm}>
-            <ProductForm />
+            <ProductForm 
+              onSubmit={handleSubmitCreateProduct}
+              onChangeImageUrl={(imageUrl) => {
+                setUploadImageUrl(imageUrl);
+              }}
+            />
             </Form>
 
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <Button
+                onClick = { createProductForm.handleSubmit(handleSubmitCreateProduct)}
                 >
-                  Create Category
+                  Create Product
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
