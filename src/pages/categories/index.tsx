@@ -69,7 +69,7 @@ const CategoriesPage: NextPageWithLayout = () => {
   })
 
   // handle update category
-  const { mutate : updateCategotyyById } = api.category.updateCategoryById.useMutation({
+  const { mutate : updateCategory } = api.category.updateCategoryById.useMutation({
     onSuccess : async() => {
       await apiUtils.category.getCategories.invalidate();
       alert("Category Updated Successfully");
@@ -90,7 +90,7 @@ const CategoriesPage: NextPageWithLayout = () => {
   const handleSubmitEditCategory = (data: CategoryFormSchema) => {
     if(!categoryToEdit) return;
     
-    updateCategotyyById({
+    updateCategory({
       name : data.name,
       categoryId : categoryToEdit,
     })

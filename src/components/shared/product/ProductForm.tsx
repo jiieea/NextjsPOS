@@ -9,6 +9,7 @@ import { Bucket } from "@/server/bucket"
 
 import { api } from "@/utils/api"
 import { useFormContext } from "react-hook-form"
+import { toast, Toaster } from "sonner"
 
 type ProductFormProps = {
     onSubmit : (values : ProductFormSchema) => void;
@@ -38,7 +39,7 @@ export const ProductForm = ({ onSubmit , onChangeImageUrl }: ProductFormProps) =
             })
 
         onChangeImageUrl(imageUrl);
-        alert("Image uploaded successfully");
+        toast("Image uploaded successfully");
         }
     }
    
@@ -75,7 +76,7 @@ export const ProductForm = ({ onSubmit , onChangeImageUrl }: ProductFormProps) =
                 name="categoryId"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Product Price</FormLabel>
+                        <FormLabel>Product Category</FormLabel>
                         <FormControl>
                            <Select
                             value={field.value}
@@ -112,9 +113,8 @@ export const ProductForm = ({ onSubmit , onChangeImageUrl }: ProductFormProps) =
             <div>
                 {/* form upload image */}
                 <label className="space-y-4">Product Image </label>
-                <input type="file" accept="image/*" onChange={imageChangeHandler} />
+                <input type="file" accept="image/*" onChange={imageChangeHandler} className="cursor-pointer"/>
             </div>
-
         </form>
     )
 }

@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { supabaseAdmin } from "../../supabase-admin";
 import { TRPCError } from "@trpc/server";
 import { Bucket } from "@/server/bucket";
+
 export const productRouter = createTRPCRouter({
     getProducts : protectedProcedure.query(async({ ctx }) => {
         const { db } = ctx;
@@ -64,5 +65,19 @@ export const productRouter = createTRPCRouter({
         return data;
     }),
 
-
+    // delete a product
+   deleteProductById : protectedProcedure.input(
+    z.object({
+        productId : z.string()
+    })
+   )
+   .mutation(async({ ctx , input }) => {
+    const { db } = ctx;
+    // delete the product from the database
+    await db.product.delete({
+        where : {
+            id : input.productId
+        }
+    })
+}),
 });
