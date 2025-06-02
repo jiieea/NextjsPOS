@@ -28,14 +28,19 @@ const ProductsPage: NextPageWithLayout = () => {
   const [uploadImageUrl, setUploadImageUrl] = useState<string | null>(null);
   const [createProductDialogOpen, setCreateProductDialogOpen] =
   useState(false);
+  const [editProductDialogOpen , setEditProductDialogOpen] = useState(false);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
   const [ productToDelete , setProductToDelete ] = useState<string | null>(null);
   const { data : products , isLoading : isLoadingProducts } = api.product.getProducts.useQuery();
+  const [productToEdit , setProductToEdit] = useState<string | null>(null);
 
   const createProductForm = useForm<ProductFormSchema>({
     resolver : zodResolver(productFormSchema),
   });
 
+  const updateProductForm = useForm<ProductFormSchema>({
+    resolver : zodResolver(productFormSchema),
+  })
   const { mutate : createProduct } = api.product.createNewProduct.useMutation({
     onSuccess : async() => {
       await apiUtils.product.getProducts.invalidate();
@@ -61,7 +66,6 @@ const ProductsPage: NextPageWithLayout = () => {
   // delete product handler 
   const handleClickDeleteProduct = (productId : string) => {
     setProductToDelete(productId);
-    
   }
 
   // confirm delete product
@@ -88,6 +92,45 @@ const ProductsPage: NextPageWithLayout = () => {
       categoryId : values.categoryId,
       image : uploadImageUrl,
     });
+  }
+
+  // handle edit product
+  const { mutate : editProduct } = api.product.updateProductById.useMutation({
+    onSuccess : async() => {
+      await apiUtils.product.getProducts.invalidate(); // invalidate the query
+      toast("Product updated successfully");
+      updateProductForm.reset();
+      setEditProductDialogOpen(false);
+      setProductToEdit(null);
+    }
+  })
+  
+  const handleClickEditProduct = (product : { id : string; name : string; price : number; categoryId : string; image : string | null;}) => {
+    setEditProductDialogOpen(true);
+    setProductToEdit(product.id);
+    updateProductForm.reset({
+      name : product.name,
+      price : product.price,
+      categoryId : product.categoryId,
+    })
+  }
+
+  const handleSubmitUpdateProduct = (values : ProductFormSchema) => {
+
+    if(!uploadImageUrl) {
+      toast("Please upload an image");
+      return;
+    }
+
+    if(!productToEdit) return;
+    editProduct({
+      name : values.name,
+      price : values.price,
+      image : uploadImageUrl,
+      categoryId : values.categoryId,
+      productId : productToEdit,
+    })
+
   }
   
   return (
@@ -159,12 +202,40 @@ const ProductsPage: NextPageWithLayout = () => {
                   onDelete={
                     () => handleClickDeleteProduct(product.id)
                   }
+                  onEdit={() => product.id && handleClickEditProduct({
+                    id : product.id,
+                    name : product.name,
+                    price : product.price,
+                    categoryId : product.category.id,
+                    image : product.image,
+                  })}
                 />
               )
             })
           )
         }
       </div>
+
+        <AlertDialog
+       open={editProductDialogOpen}
+       onOpenChange={setEditProductDialogOpen}
+        >
+          <AlertDialogContent>
+            <Form {...updateProductForm}>
+              <ProductForm 
+                onSubmit={handleSubmitUpdateProduct}
+                onChangeImageUrl={(url) => {
+                  setUploadImageUrl(url);
+                }}
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button onClick={updateProductForm.handleSubmit(handleSubmitUpdateProduct)}>Update Product</Button>
+              </AlertDialogFooter>
+            </Form>
+          </AlertDialogContent>
+        </AlertDialog>
+
 
       <AlertDialog
         open={!!productToDelete}
@@ -199,8 +270,6 @@ const ProductsPage: NextPageWithLayout = () => {
     </>
   );
 };
-
-
 
 ProductsPage.getLayout = (page: ReactElement) => {
   return <DashboardLayout>{page}</DashboardLayout>;

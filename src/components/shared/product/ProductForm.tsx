@@ -6,10 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { type ProductFormSchema } from "@/forms/products"
 import { uploadFileToSignedUrl } from "@/lib/supabase"
 import { Bucket } from "@/server/bucket"
-
 import { api } from "@/utils/api"
 import { useFormContext } from "react-hook-form"
-import { toast, Toaster } from "sonner"
+import { toast } from "sonner"
 
 type ProductFormProps = {
     onSubmit : (values : ProductFormSchema) => void;
