@@ -8,28 +8,45 @@ import { CategoryFilterCard } from "@/components/shared/category/CategoryFilterC
 import { CreateOrderSheet } from "@/components/shared/CreateOrderSheet";
 import { ProductMenuCard } from "@/components/shared/product/ProductMenuCard";
 import { Input } from "@/components/ui/input";
-import { CATEGORIES, PRODUCTS } from "@/data/mock";
 import { Search, ShoppingCart } from "lucide-react";
 import type { ReactElement } from "react";
 import { useMemo, useState } from "react";
 import type { NextPageWithLayout } from "../_app";
 import { Button } from "@/components/ui/button";
+import { api } from "@/utils/api";
+import { useCartStore } from "@/store/cart";
+import { Toaster } from "@/components/ui/sonner";
 
 const DashboardPage: NextPageWithLayout = () => {
+  const cartStore = useCartStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [orderSheetOpen, setOrderSheetOpen] = useState(false);
+  const { data : products } = api.product.getProducts.useQuery();
+  const { data : categories }  = api.category.getCategories.useQuery();
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
   };
 
-  const handleAddToCart = (productId: string) => {};
+  const handleAddToCart = (productId: string) => {
+    const product = products?.find((product) => product.id === productId);
+    if(!product){
+      alert("Product not found"); return;
+    }
+
+    cartStore.addToCart({
+      productId : product.id,
+      name : product.name ?? "",
+      price : product.price,
+      image : product.image ?? "",
+    })
+  };
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((product) => {
+    return categories?.filter((product) => {
       const categoryMatch =
-        selectedCategory === "all" || product.category === selectedCategory;
+        selectedCategory === "all" || product.name === selectedCategory;
 
       const searchMatch = product.name
         .toLowerCase()
@@ -44,18 +61,22 @@ const DashboardPage: NextPageWithLayout = () => {
       <DashboardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <DashboardTitle>Dashboard</DashboardTitle>
+            <DashboardTitle>Dashboard { cartStore.cart.length}</DashboardTitle>
             <DashboardDescription>
               Welcome to your Simple POS system dashboard.
             </DashboardDescription>
           </div>
 
-          <Button
+         {
+          !!cartStore.cart.length && (
+            <Button
             className="animate-in slide-in-from-right"
             onClick={() => setOrderSheetOpen(true)}
           >
             <ShoppingCart /> Cart
           </Button>
+          )
+         }
         </div>
       </DashboardHeader>
 
@@ -71,38 +92,35 @@ const DashboardPage: NextPageWithLayout = () => {
         </div>
 
         <div className="flex space-x-4 overflow-x-auto pb-2">
-          {CATEGORIES.map((category) => (
+          {categories?.map((category) => (
             <CategoryFilterCard
               key={category.id}
-              name={category.name}
-              productCount={category.count}
+              name={category.name ?? ""}
+              productCount={category.productCound ?? 0}
               isSelected={selectedCategory === category.id}
-              onClick={() => handleCategoryClick(category.id)}
+              onClick={() => category.id ? handleCategoryClick(category.id) : undefined}
             />
           ))}
         </div>
 
         <div>
-          {filteredProducts.length === 0 ? (
-            <div className="my-8 flex flex-col items-center justify-center">
-              <p className="text-muted-foreground text-center">
-                No products found
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {filteredProducts.map((product) => (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+              {products?.map((product) => (
                 <ProductMenuCard
                   key={product.id}
-                  product={product}
+                  name = {product.name}
+                  price = {product.price}
+                  image = {product.image ?? ""}
+                  productId = {product.id}
                   onAddToCart={handleAddToCart}
                 />
               ))}
             </div>
-          )}
+  
         </div>
       </div>
-
+            <Toaster/>
+        
       <CreateOrderSheet
         open={orderSheetOpen}
         onOpenChange={setOrderSheetOpen}

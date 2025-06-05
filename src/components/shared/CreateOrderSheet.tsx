@@ -1,6 +1,4 @@
 import { Button } from "../ui/button";
-
-import { PRODUCTS } from "@/data/mock";
 import { toRupiah } from "@/utils/toRupiah";
 import { CheckCircle2, Minus, Plus } from "lucide-react";
 import Image from "next/image";
@@ -21,20 +19,25 @@ import {
   SheetTitle,
 } from "../ui/sheet";
 import { PaymentQRCode } from "./PaymentQrCode";
+import { useCartStore } from "@/store/cart";
+import { api } from "@/utils/api";
+import { toast } from "sonner";
 
 type OrderItemProps = {
   id: string;
   name: string;
   price: number;
   quantity: number;
+  image: string;
 };
 
-const OrderItem = ({ id, name, price, quantity }: OrderItemProps) => {
+const OrderItem = ({ id, name, price, quantity, image }: OrderItemProps) => {
+  const cartStore = useCartStore();
   return (
     <div className="flex gap-3" key={id}>
       <div className="relative aspect-square h-20 shrink-0 overflow-hidden rounded-xl">
         <Image
-          src={PRODUCTS.find((p) => p.id === id)?.image ?? ""}
+          src={image}
           alt={name}
           fill
           unoptimized
@@ -55,13 +58,13 @@ const OrderItem = ({ id, name, price, quantity }: OrderItemProps) => {
 
           <div className="flex items-center gap-3">
             <button className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1">
-              <Minus className="h-4 w-4" />
+              <Minus className="h-4 w-4" onClick={() => cartStore.updateQuantity(id, -1)} />
             </button>
 
             <span className="text-sm">{quantity}</span>
 
             <button className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1">
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4" onClick={() => cartStore.updateQuantity(id, 1)} />
             </button>
           </div>
         </div>
@@ -79,21 +82,41 @@ export const CreateOrderSheet = ({
   open,
   onOpenChange,
 }: CreateOrderSheetProps) => {
+  const cartStore = useCartStore();
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentInfoLoading, setPaymentInfoLoading] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  const subtotal = 100000;
+  const subtotal = cartStore.cart.reduce((acc, item) => {
+    return acc + item.price * item.quantity;
+  }, 0);
   const tax = useMemo(() => subtotal * 0.17, [subtotal]);
   const grandTotal = useMemo(() => subtotal + tax, [subtotal, tax]);
+  const discount = useMemo(() => {
+    if (subtotal < 100000) return 0;
+    if (subtotal < 200000) return 0.05;
+    if (subtotal < 300000) return 0.1;
+    return 0.15;
+  }, [subtotal]);
+  const discountAmount = useMemo(() => subtotal * discount, [subtotal, discount]);
 
-  const handleCreateOrder = () => {
+  const { mutate : createOrder , data : createOrderDataResponse } = api.order.createOrder.useMutation({
+   onSuccess : () => {
+    toast.success("Order created successfully");
     setPaymentDialogOpen(true);
-    setPaymentInfoLoading(true);
-
-    setTimeout(() => {
-      setPaymentInfoLoading(false);
-    }, 3000);
+   },
+   
+    
+  })
+  const handleCreateOrder = () => {
+   createOrder({
+    orderItems : cartStore.cart.map((item) => {
+      return {
+        productId : item.productId,
+        quantity : item.quantity,
+      }
+    })
+   })
   };
 
   const handleRefresh = () => {
@@ -114,7 +137,20 @@ export const CreateOrderSheet = ({
           <div className="space-y-4 overflow-y-scroll p-4">
             <h1 className="text-xl font-medium">Order Items</h1>
             <div className="flex flex-col gap-6">
-              {/* Map order items here */}
+              {
+                cartStore.cart.map((item) => {
+                  return (
+                    <OrderItem
+                      key={item.productId}
+                      id={item.productId}
+                      name={item.name}
+                      price={item.price}
+                      quantity={item.quantity}
+                      image={item.image}
+                    />
+                  )
+                })
+              }
             </div>
           </div>
 
@@ -130,9 +166,15 @@ export const CreateOrderSheet = ({
 
               <Separator className="col-span-2" />
 
-              <p>Total</p>
+              <p>Discount</p>
+              <p className="place-self-end">{toRupiah(discountAmount)}</p>
 
-              <p className="place-self-end">{toRupiah(grandTotal)}</p>
+              <p>Total</p>
+              <p className="place-self-end text-muted-foreground text-sm line-through">{toRupiah(grandTotal)}</p>
+              <p></p>
+              <p className="place-self-end ">
+                {toRupiah(subtotal + tax - discountAmount)}
+              </p>
             </div>
 
             <Button
@@ -164,15 +206,15 @@ export const CreateOrderSheet = ({
                 </Button>
 
                 {!paymentSuccess ? (
-                  <PaymentQRCode qrString="qr-string" />
+                  <PaymentQRCode qrString={createOrderDataResponse?.qrString ?? ""}/>
                 ) : (
                   <CheckCircle2 className="size-80 text-green-500" />
                 )}
 
-                <p className="text-3xl font-medium">{toRupiah(grandTotal)}</p>
+                <p className="text-3xl font-medium">{toRupiah(createOrderDataResponse?.order.grandTotal ?? 0)}</p>
 
                 <p className="text-muted-foreground text-sm">
-                  Transaction ID: 1234567890
+                  Transaction ID: {createOrderDataResponse?.order.id}
                 </p>
               </>
             )}

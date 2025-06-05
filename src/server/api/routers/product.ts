@@ -13,6 +13,7 @@ export const productRouter = createTRPCRouter({
                 name : true,
                 price : true,
                 image : true,
+                
                 category : {
                     select : {
                         id : true,

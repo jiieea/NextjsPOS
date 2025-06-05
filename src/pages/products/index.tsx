@@ -9,8 +9,18 @@ import type { ReactElement } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCatalogCard } from "@/components/shared/product/ProductCatalogCard";
 import { api } from "@/utils/api";
-import { AlertDialog, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { AlertDialogCancel, AlertDialogContent } from "@/components/ui/alert-dialog";
+import { 
+  AlertDialog, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
+import { 
+  AlertDialogCancel,
+  AlertDialogContent 
+} from "@/components/ui/alert-dialog";
 import { ProductForm } from "@/components/shared/product/ProductForm";
 import { useForm } from "react-hook-form";
 import { productFormSchema } from "@/forms/products";
@@ -105,18 +115,25 @@ const ProductsPage: NextPageWithLayout = () => {
     }
   })
   
-  const handleClickEditProduct = (product : { id : string; name : string; price : number; categoryId : string; image : string | null;}) => {
+  const handleClickEditProduct = (product : 
+    { 
+      id : string; 
+      name : string; 
+      price : number; 
+      categoryId : string; 
+      image : string | null;
+    }) => {
     setEditProductDialogOpen(true);
     setProductToEdit(product.id);
     updateProductForm.reset({
       name : product.name,
       price : product.price,
       categoryId : product.categoryId,
+      image : product.image ?? "",
     })
   }
 
   const handleSubmitUpdateProduct = (values : ProductFormSchema) => {
-
     if(!uploadImageUrl) {
       toast("Please upload an image");
       return;
