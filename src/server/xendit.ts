@@ -4,6 +4,10 @@ export const xenditPaymentRequestClient = new PaymentRequest({
 secretKey : process.env.XENDIT_MONEY_IN_KEY!,
 });
 
+export const xenditPaymentMethodClient = new PaymentMethod({
+    secretKey : process.env.XENDIT_MONEY_IN_KEY!,
+})
+
 // create qris
 
 type CreateQRISPaymentParams = {

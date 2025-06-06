@@ -25,9 +25,7 @@ const DashboardPage: NextPageWithLayout = () => {
   const { data : products } = api.product.getProducts.useQuery();
   const { data : categories }  = api.category.getCategories.useQuery();
 
-  const handleCategoryClick = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-  };
+ 
 
   const handleAddToCart = (productId: string) => {
     const product = products?.find((product) => product.id === productId);
@@ -43,32 +41,50 @@ const DashboardPage: NextPageWithLayout = () => {
     })
   };
 
-  const filteredProducts = useMemo(() => {
-    return categories?.filter((product) => {
-      const categoryMatch =
-        selectedCategory === "all" || product.name === selectedCategory;
+  const findProductCount = (categoryName : string) => {
+    const count = products?.filter((product) => product.category.name === categoryName).length ?? 0;
+    return count;
+  }
 
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+  };
+
+
+  // filtered products
+  const filteredProducts = useMemo(() => {
+    return products?.filter((product) => {
+      const categoryMatch =
+        selectedCategory === "all" || product.category.name === selectedCategory;
+        // alert(selectedCategory);
+
+       // search products
       const searchMatch = product.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
 
       return categoryMatch && searchMatch;
     });
-  }, [selectedCategory, searchQuery]);
+
+    
+  }, [selectedCategory, searchQuery, products]);
+
+
+  const quantity = cartStore.cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <>
       <DashboardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <DashboardTitle>Dashboard { cartStore.cart.length}</DashboardTitle>
+            <DashboardTitle>Dashboard </DashboardTitle>
             <DashboardDescription>
               Welcome to your Simple POS system dashboard.
             </DashboardDescription>
           </div>
 
          {
-          !!cartStore.cart.length && (
+          !! quantity && (
             <Button
             className="animate-in slide-in-from-right"
             onClick={() => setOrderSheetOpen(true)}
@@ -96,30 +112,38 @@ const DashboardPage: NextPageWithLayout = () => {
             <CategoryFilterCard
               key={category.id}
               name={category.name ?? ""}
-              productCount={category.productCound ?? 0}
               isSelected={selectedCategory === category.id}
-              onClick={() => category.id ? handleCategoryClick(category.id) : undefined}
+              onClick={() => handleCategoryClick(category.name ?? "")}
+              productCount={findProductCount(category.name ?? "")}
             />
           ))}
         </div>
 
-        <div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-              {products?.map((product) => (
-                <ProductMenuCard
-                  key={product.id}
-                  name = {product.name}
-                  price = {product.price}
-                  image = {product.image ?? ""}
-                  productId = {product.id}
-                  onAddToCart={handleAddToCart}
-                />
-              ))}
-            </div>
-  
+          {
+            !filteredProducts?.length ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground">No products found</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          {filteredProducts?.map((product) => (
+            <ProductMenuCard
+              key={product.id}
+              name = {product.name}
+              price = {product.price}
+              image = {product.image ?? ""}
+              productId = {product.id}
+              onAddToCart={handleAddToCart}
+            />
+          ))}
         </div>
+            )
+          }
+        
       </div>
             <Toaster/>
+
+
         
       <CreateOrderSheet
         open={orderSheetOpen}

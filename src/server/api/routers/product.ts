@@ -25,6 +25,8 @@ export const productRouter = createTRPCRouter({
         return products;
     }),
 
+    // get products by category
+
     // create a new product
     createNewProduct  : protectedProcedure.input(
         z.object({

@@ -1,6 +1,6 @@
 import { Button } from "../ui/button";
 import { toRupiah } from "@/utils/toRupiah";
-import { CheckCircle2, Minus, Plus } from "lucide-react";
+import { CheckCircle2, Loader2, Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
@@ -34,42 +34,47 @@ type OrderItemProps = {
 const OrderItem = ({ id, name, price, quantity, image }: OrderItemProps) => {
   const cartStore = useCartStore();
   return (
+   // if quantity is 0 , remove the item
+   quantity < 1 ? (
+    null
+   ) : (
     <div className="flex gap-3" key={id}>
-      <div className="relative aspect-square h-20 shrink-0 overflow-hidden rounded-xl">
-        <Image
-          src={image}
-          alt={name}
-          fill
-          unoptimized
-          className="object-cover"
-        />
+    <div className="relative aspect-square h-20 shrink-0 overflow-hidden rounded-xl">
+      <Image
+        src={image}
+        alt={name}
+        fill
+        unoptimized
+        className="object-cover"
+      />
+    </div>
+
+    <div className="flex w-full flex-col justify-between">
+      <div className="flex flex-col">
+        <p>{name}</p>
+        <p className="text-muted-foreground text-sm">
+          {toRupiah(price)} x {quantity}
+        </p>
       </div>
 
-      <div className="flex w-full flex-col justify-between">
-        <div className="flex flex-col">
-          <p>{name}</p>
-          <p className="text-muted-foreground text-sm">
-            {toRupiah(price)} x {quantity}
-          </p>
-        </div>
+      <div className="flex w-full justify-between">
+        <p className="font-medium">{toRupiah(quantity * price)}</p>
 
-        <div className="flex w-full justify-between">
-          <p className="font-medium">{toRupiah(quantity * price)}</p>
+        <div className="flex items-center gap-3">
+          <button className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1">
+            <Minus className="h-4 w-4" onClick={() => cartStore.updateQuantity(id, -1)} />
+          </button>
 
-          <div className="flex items-center gap-3">
-            <button className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1">
-              <Minus className="h-4 w-4" onClick={() => cartStore.updateQuantity(id, -1)} />
-            </button>
+          <span className="text-sm">{quantity}</span>
 
-            <span className="text-sm">{quantity}</span>
-
-            <button className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1">
-              <Plus className="h-4 w-4" onClick={() => cartStore.updateQuantity(id, 1)} />
-            </button>
-          </div>
+          <button className="bg-secondary hover:bg-secondary/80 cursor-pointer rounded-full p-1">
+            <Plus className="h-4 w-4" onClick={() => cartStore.updateQuantity(id, 1)} />
+          </button>
         </div>
       </div>
     </div>
+  </div>
+   )
   );
 };
 
@@ -86,6 +91,7 @@ export const CreateOrderSheet = ({
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentInfoLoading, setPaymentInfoLoading] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [ createOrderLoading, setCreateOrderLoading ] = useState(false);
 
   const subtotal = cartStore.cart.reduce((acc, item) => {
     return acc + item.price * item.quantity;
@@ -170,20 +176,39 @@ export const CreateOrderSheet = ({
               <p className="place-self-end">{toRupiah(discountAmount)}</p>
 
               <p>Total</p>
-              <p className="place-self-end text-muted-foreground text-sm line-through">{toRupiah(grandTotal)}</p>
-              <p></p>
+              <p className="place-self-end text-muted-foreground text-xs line-through">{toRupiah(grandTotal)}</p>
+             <div>
+              {
+                grandTotal > 10000000 ? (
+                  <p className="text-red-500">
+                    You&apos;ve reached the maximum order amount.
+                  </p>
+                ) : (
+                ""
+                )
+              }
+             </div>
               <p className="place-self-end ">
                 {toRupiah(subtotal + tax - discountAmount)}
               </p>
             </div>
 
-            <Button
+           {
+            createOrderLoading ? (
+              <div className="flex flex-col items-center justify-center gap-2">
+                <Loader2 className="size-10 animate-spin text-primary" />
+                <p>Creating order...</p>
+              </div>
+            ) : (
+              <Button
               size="lg"
               className="mt-8 w-full"
               onClick={handleCreateOrder}
             >
               Create Order
             </Button>
+            )
+           }
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -201,9 +226,13 @@ export const CreateOrderSheet = ({
               </div>
             ) : (
               <>
-                <Button variant="link" onClick={handleRefresh}>
-                  Refresh
-                </Button>
+                {
+                  !paymentSuccess && (
+                    <Button variant="link" onClick={handleRefresh}>
+                      Refresh
+                    </Button>
+                  )
+                }
 
                 {!paymentSuccess ? (
                   <PaymentQRCode qrString={createOrderDataResponse?.qrString ?? ""}/>

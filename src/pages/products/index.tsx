@@ -91,7 +91,7 @@ const ProductsPage: NextPageWithLayout = () => {
 
   const handleSubmitCreateProduct =  (values : ProductFormSchema) => {
    if(!uploadImageUrl) {
-    toast("Please upload an image");
+    toast.error("Please upload an image");
     return;
    }
    

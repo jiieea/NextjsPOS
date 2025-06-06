@@ -1,4 +1,4 @@
-import { BarChart3, Grid3X3, Package, ShoppingCart, Sun } from "lucide-react";
+import { BarChart3, Grid3X3, Moon, Package, ShoppingCart, Sun } from "lucide-react";
 import React, { type ReactNode } from "react";
 
 import {
@@ -61,7 +61,7 @@ export const DashboardDescription = ({
 };
 
 // Main dashboard layout component
-interface DashboardLayoutProps {
+interface DashboardLayoutProps {  
   children: ReactNode;
 }
 
@@ -80,6 +80,14 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <Sidebar>
           <SidebarHeader className="p-4">
             <h2 className="text-xl font-bold">Simple POS</h2>
+             {/* toggle theme */}
+        <Button variant="link" onClick={toggleTheme} className="absolute top-4 right-4">
+          {theme === "dark" ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
+        </Button>
           </SidebarHeader>
           <SidebarContent className="px-4">
             <SidebarMenu>
@@ -141,6 +149,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
+
+       
 
         <main className="relative flex-1 overflow-auto p-6">{children}</main>
       </div>

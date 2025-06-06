@@ -29,14 +29,19 @@ import { useForm } from "react-hook-form";
 import type { NextPageWithLayout } from "../_app";
 import { api } from "@/utils/api";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Toaster } from "sonner";
 
 
 const CategoriesPage: NextPageWithLayout = () => {
   const apiUtils = api.useUtils();
-
+  const { data : products } = api.product.getProducts.useQuery(); // get products data
 
   const [createCategoryDialogOpen, setCreateCategoryDialogOpen] =
     useState(false);
+  const [createCategoryLoading, setCreateCategoryLoading] = useState(false);
+  const [deleteCategoryLoading, setDeleteCategoryLoading] = useState(false);
+  const [editCategoryLoading, setEditCategoryLoading] = useState(false);
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [categoryToEdit, setCategoryToEdit] = useState<string | null>(null);
@@ -53,26 +58,27 @@ const CategoriesPage: NextPageWithLayout = () => {
   const { mutate : createCategory } = api.category.createNewCategory.useMutation({
     onSuccess : async() => {
       await apiUtils.category.getCategories.invalidate();
-      alert("Category created successfully");
+      toast.success("Category created successfully");
       setCreateCategoryDialogOpen(false);
       createCategoryForm.reset();
-      
+      setCreateCategoryLoading(false);
     }
   });
 
   const { mutate : deleteCategoryById } = api.category.deleteCategoryById.useMutation({
     onSuccess : async() => {
       await apiUtils.category.getCategories.invalidate();
-      alert("Delete Category Success");
+      toast.success("Delete Category Success");
       setCategoryToDelete(null);
-    }
+      setDeleteCategoryLoading(false);
+    },
   })
 
   // handle update category
   const { mutate : updateCategory } = api.category.updateCategoryById.useMutation({
     onSuccess : async() => {
       await apiUtils.category.getCategories.invalidate();
-      alert("Category Updated Successfully");
+      toast.success("Category Updated Successfully");
       editCategoryForm.reset();
       setEditCategoryDialogOpen(false);
       setCategoryToEdit(null);
@@ -81,6 +87,7 @@ const CategoriesPage: NextPageWithLayout = () => {
 
   // handle submit create category
   const handleSubmitCreateCategory = (data: CategoryFormSchema) => {
+    setCreateCategoryLoading(true);
     createCategory({
       name : data.name,
     })
@@ -110,11 +117,21 @@ const CategoriesPage: NextPageWithLayout = () => {
 
 
   // handle confirm delete category
-const handleConfirmDeleteCategory = () => {
+const handleConfirmDeleteCategory = () => { 
   if(!categoryToDelete) return;
+  setDeleteCategoryLoading(true);
   deleteCategoryById({
     categoryId : categoryToDelete
   })
+}
+
+// handle product count
+const handleProductCount = (categoryName : string) => {
+  const productQty = products?.filter((product : { category : { name : string; }; }) => 
+    product.category.name === categoryName
+  ).length ?? 0;
+
+  return productQty;
 }
 
   return (
@@ -149,11 +166,18 @@ const handleConfirmDeleteCategory = () => {
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <Button
-                  onClick={createCategoryForm.handleSubmit(
-                    handleSubmitCreateCategory,
-                  )}
+                  onClick={
+                    createCategoryForm.handleSubmit(
+                      handleSubmitCreateCategory,
+                    )
+                  }
+                  disabled={createCategoryLoading}
                 >
-                  Create Category
+                  {createCategoryLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Create Category"
+                  )}
                 </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -174,7 +198,7 @@ const handleConfirmDeleteCategory = () => {
                 <CategoryCatalogCard
                   key={category.id}
                   name={category.name ?? ''}
-                  productCound={category.productCound ?? 0}
+                  productCound={handleProductCount(category.name ?? " ")}
                   onDelete={() => category.id && handleClickDeleteCategory(category.id)}
                   onEdit={() => category.id && handleClickEditCategory({
                     id : category.id,
@@ -184,6 +208,7 @@ const handleConfirmDeleteCategory = () => {
               )
 })
         )}
+        <Toaster />
       </div>
 
       <AlertDialog
@@ -204,9 +229,18 @@ const handleConfirmDeleteCategory = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button
-              onClick={editCategoryForm.handleSubmit(handleSubmitEditCategory)}
+              onClick={
+                editCategoryForm.handleSubmit(handleSubmitEditCategory)
+              }
+              disabled={editCategoryLoading}
             >
-              Edit Category
+              {
+                editCategoryLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Edit Category"
+                )
+              }
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -230,7 +264,15 @@ const handleConfirmDeleteCategory = () => {
           </AlertDialogDescription>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant="destructive" onClick={handleConfirmDeleteCategory}>Delete</Button>
+            <Button variant="destructive" onClick={handleConfirmDeleteCategory} disabled={deleteCategoryLoading}>
+              {
+                deleteCategoryLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Delete Category"
+                )
+              }
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
