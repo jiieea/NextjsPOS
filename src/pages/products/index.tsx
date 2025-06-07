@@ -55,7 +55,7 @@ const ProductsPage: NextPageWithLayout = () => {
     onSuccess : async() => {
       await apiUtils.product.getProducts.invalidate();
       createProductForm.reset();
-      toast("Product created successfully");
+      toast.success("Product created successfully");
       setCreateProductDialogOpen(false);
       setIsCreatingProduct(false);
     },
@@ -67,7 +67,7 @@ const ProductsPage: NextPageWithLayout = () => {
   const { mutate : deleteProduct } = api.product.deleteProductById.useMutation({
     onSuccess : async() => {
       await apiUtils.product.getProducts.invalidate(); // invalidate the query
-      toast("Product deleted successfully");
+      toast.success("Product deleted successfully");
       setProductToDelete(null);
       setIsDeletingProduct(false);
     }
@@ -91,7 +91,7 @@ const ProductsPage: NextPageWithLayout = () => {
 
   const handleSubmitCreateProduct =  (values : ProductFormSchema) => {
    if(!uploadImageUrl) {
-    toast.error("Please upload an image");
+    toast.warning("Please upload an image");
     return;
    }
    
@@ -108,7 +108,7 @@ const ProductsPage: NextPageWithLayout = () => {
   const { mutate : editProduct } = api.product.updateProductById.useMutation({
     onSuccess : async() => {
       await apiUtils.product.getProducts.invalidate(); // invalidate the query
-      toast("Product updated successfully");
+      toast.success("Product updated successfully");
       updateProductForm.reset();
       setEditProductDialogOpen(false);
       setProductToEdit(null);
@@ -135,7 +135,7 @@ const ProductsPage: NextPageWithLayout = () => {
 
   const handleSubmitUpdateProduct = (values : ProductFormSchema) => {
     if(!uploadImageUrl) {
-      toast("Please upload an image");
+      toast.error("Please upload an image");
       return;
     }
 

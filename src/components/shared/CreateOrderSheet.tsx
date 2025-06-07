@@ -106,7 +106,7 @@ export const CreateOrderSheet = ({
   }, [subtotal]);
   const discountAmount = useMemo(() => subtotal * discount, [subtotal, discount]);
 
-  const { mutate : createOrder , data : createOrderDataResponse } = api.order.createOrder.useMutation({
+  const { mutate : createOrder , data : createOrderDataResponse , isPending  } = api.order.createOrder.useMutation({
    onSuccess : () => {
     toast.success("Order created successfully");
     setPaymentDialogOpen(true);
@@ -194,10 +194,9 @@ export const CreateOrderSheet = ({
             </div>
 
            {
-            createOrderLoading ? (
+            isPending  ? (
               <div className="flex flex-col items-center justify-center gap-2">
-                <Loader2 className="size-10 animate-spin text-primary" />
-                <p>Creating order...</p>
+                <Loader2 className="size-10 animate-spin text-primary" /> &nbsp;
               </div>
             ) : (
               <Button

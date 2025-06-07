@@ -79,7 +79,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className="flex h-screen w-full">
         <Sidebar>
           <SidebarHeader className="p-4">
-            <h2 className="text-xl font-bold">Simple POS</h2>
+            <h2 className="text-xl font-bold">HighTech</h2>
              {/* toggle theme */}
         <Button variant="link" onClick={toggleTheme} className="absolute top-4 right-4">
           {theme === "dark" ? (

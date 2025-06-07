@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/utils/api";
 import { useCartStore } from "@/store/cart";
 import { Toaster } from "@/components/ui/sonner";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 const DashboardPage: NextPageWithLayout = () => {
   const cartStore = useCartStore();
@@ -89,7 +91,14 @@ const DashboardPage: NextPageWithLayout = () => {
             className="animate-in slide-in-from-right"
             onClick={() => setOrderSheetOpen(true)}
           >
-            <ShoppingCart /> Cart
+            
+           
+            <ShoppingCart />  &nbsp;  <Badge
+              variant="default"
+              className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums "
+            >
+              { quantity }
+            </Badge>
           </Button>
           )
          }
@@ -146,7 +155,7 @@ const DashboardPage: NextPageWithLayout = () => {
 
         
       <CreateOrderSheet
-        open={orderSheetOpen}
+        open={ orderSheetOpen && quantity > 0}
         onOpenChange={setOrderSheetOpen}
       />
     </>

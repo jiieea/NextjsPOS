@@ -61,7 +61,9 @@ export const useCartStore = create<CartState>()((set) => ({
           ? { ...item, quantity: Math.max(0, item.quantity + quantity) }
           : item
       );
-      return { ...state, cart: updatedCart };
+      // remove item if quantity is 0
+      const filteredCart = updatedCart.filter(item => item.quantity > 0);
+      return { ...state, cart: filteredCart };
     });
   }
 }))
