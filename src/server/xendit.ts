@@ -9,7 +9,6 @@ export const xenditPaymentMethodClient = new PaymentMethod({
 })
 
 // create qris
-
 type CreateQRISPaymentParams = {
     amout : number;
     orderId : string;
