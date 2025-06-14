@@ -28,7 +28,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { useState } from "react";
 import type { ProductFormSchema } from "@/forms/products";
-import { Loader2 } from "lucide-react";
+import { Loader2, LoaderCircle } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
@@ -40,6 +40,7 @@ const ProductsPage: NextPageWithLayout = () => {
   useState(false);
   const [editProductDialogOpen , setEditProductDialogOpen] = useState(false);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+  const[ isUpdatingProduct , setIsUpdatingProduct ] = useState(false);
   const [ productToDelete , setProductToDelete ] = useState<string | null>(null);
   const { data : products , isLoading : isLoadingProducts } = api.product.getProducts.useQuery();
   const [productToEdit , setProductToEdit] = useState<string | null>(null);
@@ -105,13 +106,14 @@ const ProductsPage: NextPageWithLayout = () => {
   }
 
   // handle edit product
-  const { mutate : editProduct } = api.product.updateProductById.useMutation({
+  const { mutate : editProduct  } = api.product.updateProductById.useMutation({
     onSuccess : async() => {
       await apiUtils.product.getProducts.invalidate(); // invalidate the query
       toast.success("Product updated successfully");
       updateProductForm.reset();
       setEditProductDialogOpen(false);
       setProductToEdit(null);
+      setIsUpdatingProduct(false);
     }
   })
   
@@ -138,6 +140,8 @@ const ProductsPage: NextPageWithLayout = () => {
       toast.error("Please upload an image");
       return;
     }
+
+    setIsUpdatingProduct(true);
 
     if(!productToEdit) return;
     editProduct({
@@ -247,7 +251,15 @@ const ProductsPage: NextPageWithLayout = () => {
               />
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <Button onClick={updateProductForm.handleSubmit(handleSubmitUpdateProduct)}>Update Product</Button>
+                <Button onClick={updateProductForm.handleSubmit(handleSubmitUpdateProduct)}>
+                  {
+                    isUpdatingProduct ? (
+                      <LoaderCircle />
+                    ) : (
+                      "Update Product"
+                    )
+                  }
+                </Button>
               </AlertDialogFooter>
             </Form>
           </AlertDialogContent>
